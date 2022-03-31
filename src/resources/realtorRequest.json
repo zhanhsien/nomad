@@ -1,0 +1,26 @@
+{
+  "query": "\nquery ConsumerSearchQuery($query: HomeSearchCriteria!, $limit: Int, $offset: Int, $sort: [SearchAPISort], $sort_type: SearchSortType, $client_data: JSON, $bucket: SearchAPIBucket)\n{\n  home_search: home_search(query: $query,\n    sort: $sort,\n    limit: $limit,\n    offset: $offset,\n    sort_type: $sort_type,\n    client_data: $client_data,\n    bucket: $bucket,\n  ){\n    count\n    total\n    results {\n      property_id\n      list_price\n      primary_photo (https: true){\n        href\n      }\n      listing_id\n      virtual_tours{\n        href\n        type\n      }\n      status\n      permalink\n      price_reduced_amount\n      description{\n        beds\n        baths\n        baths_full\n        baths_3qtr\n        baths_half\n        sqft\n        lot_sqft\n        baths_max\n        baths_min\n        beds_max\n        sqft_min\n        sqft_max\n        type\n        sold_price\n        sold_date\n      }\n      location{\n        street_view_url\n        address{\n          line\n          postal_code\n          state\n          state_code\n          city\n          coordinate {\n            lat\n            lon\n          }\n        }\n      }\n      open_houses {\n        start_date\n        end_date\n      }\n      flags{\n        is_coming_soon\n        is_new_listing (days: 14)\n        is_price_reduced (days: 30)\n        is_foreclosure\n        is_new_construction\n        is_pending\n        is_contingent\n      }\n      list_date\n      photos(limit: 1, https: true){\n        href\n      }\n    }\n  }\n}",
+  "variables": {
+    "query": {
+      "year_built": {
+        "max": 2000
+      },
+      "sqft": {
+        "min": 2500,
+        "max": 3000
+      },
+      "type": [
+        "single_family"
+      ],
+      "status": [
+        "for_sale",
+        "ready_to_build"
+      ],
+      "search_location": {
+        "location": ""
+      }
+    },
+    "limit": 200,
+    "offset": 0
+  }
+}
