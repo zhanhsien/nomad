@@ -26,8 +26,8 @@ public class HouseDeserializer extends JsonDeserializer<House> {
         house.setAddress(rootNode.get("location").get("address").get("line").textValue());
         house.setZipCode(rootNode.get("location").get("address").get("postal_code").textValue());
 
-        JsonNode coordinates = rootNode.get("location").get("address").get("coordinate");
-        house.setCoordinates(coordinates.get("lon").doubleValue(), coordinates.get("lat").doubleValue());
+//        JsonNode coordinates = rootNode.get("location").get("address").get("coordinate");
+//        house.setCoordinates(coordinates.get("lon").doubleValue(), coordinates.get("lat").doubleValue());
 
         return house;
     }

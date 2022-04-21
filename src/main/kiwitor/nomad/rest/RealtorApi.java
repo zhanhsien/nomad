@@ -25,7 +25,7 @@ public class RealtorApi {
     public static void getPropertyValues(City city) {
         List<House> houses = new LinkedList<>();
         try(RestUtils restUtils = new RestUtils(BASE_URL, PROPERTY_RESOURCE)) {
-            restUtils.query(new String[] {"schema", "vesta"});
+            restUtils.query("schema", "vesta");
 
             houses.addAll(getHouses(restUtils, city, true));
             houses.addAll(getHouses(restUtils, city, false));

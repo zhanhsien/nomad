@@ -4,6 +4,8 @@ import lombok.Getter;
 
 import java.util.Arrays;
 
+//
+
 @Getter
 public enum States {
     ALABAMA("Alabama", "AL"),
@@ -69,5 +71,16 @@ public enum States {
     public static States getByCode(String code) {
         return Arrays.stream(values()).filter(state -> state.getCode().equalsIgnoreCase(code)).findFirst()
                 .orElse(null);
+    }
+
+    public static States getByName(String name) {
+        States states = Arrays.stream(values()).filter(state -> state.getName().equalsIgnoreCase(name)).findFirst()
+                .orElse(null);
+
+        if(states == null) {
+            System.out.println(name);
+        }
+
+        return states;
     }
 }

@@ -1,18 +1,24 @@
 package main.kiwitor.nomad.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import main.kiwitor.nomad.model.deserialize.CountyDeserializer;
 
 import java.util.LinkedList;
 import java.util.List;
 
 @Getter
 @Setter
-public class County {
+@NoArgsConstructor
+@JsonDeserialize(using = CountyDeserializer.class)
+public class County extends Zone {
     private State state;
     private String name;
     private double salesTax;
     private double propertyTax;
+    private String hazardIndex;
     private List<City> cities = new LinkedList<>();
 
     public County(String name) {

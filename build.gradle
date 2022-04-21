@@ -16,6 +16,7 @@ dependencies {
 
     compile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '4.7.5.Final'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.2'
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: '2.12.2'
 
     compile group: 'org.jsoup', name: 'jsoup', version: '1.14.3'
 

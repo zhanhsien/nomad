@@ -11,6 +11,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 
 public class RestUtils implements AutoCloseable {
     private WebTarget target;
@@ -38,10 +39,12 @@ public class RestUtils implements AutoCloseable {
         target = StringUtils.isNotEmpty(path) ? client.target(targetUrl).path(path) : client.target(targetUrl);
     }
 
-    void query(String[]... query) {
-        for(String[] q : query) {
-            target = target.queryParam(q[0], q[1]);
-        }
+    void query(String key, String value) {
+        target = target.queryParam(key, value);
+    }
+
+    void query(Map<String, String> params) {
+        params.forEach(this::query);
     }
 
     Response get() {

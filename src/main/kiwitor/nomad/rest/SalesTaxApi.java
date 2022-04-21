@@ -76,6 +76,11 @@ public class SalesTaxApi {
 
     public static void getCityData(State state, City city) {
         String cityName = city.getName();
+
+        if(cityName.equalsIgnoreCase("Paul")) {
+            System.out.println("For fuck sakes");
+        }
+
         String path = sanitizePath(cityName).replaceAll("[^A-Za-z0-9]", "").concat(state.getCode());
         String cityStr = escapeCityName(cityName);
 

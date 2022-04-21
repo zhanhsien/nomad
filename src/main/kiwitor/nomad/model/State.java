@@ -1,10 +1,12 @@
 package main.kiwitor.nomad.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import main.kiwitor.nomad.constants.States;
 import main.kiwitor.nomad.constants.TaxType;
+import main.kiwitor.nomad.model.deserialize.StateDeserializer;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -13,9 +15,12 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
+@JsonDeserialize(using = StateDeserializer.class)
 public class State {
+    private String id;
     private String name;
     private String code;
+    private String censusId;
     private TaxType taxType;
     private double stdDeductSingle = 0.00;
     private double stdDeductJoint = 0.00;

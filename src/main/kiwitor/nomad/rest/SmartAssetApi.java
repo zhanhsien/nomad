@@ -20,7 +20,7 @@ public class SmartAssetApi {
     public static void getPropertyTax(County county) {
         String path = String.format(PROPERTY_TAX_RESOURCE, county.getState().getName().toLowerCase().replaceAll(" ", "-"));
         try(RestUtils restUtils = new RestUtils(BASE_URL, path)) {
-            restUtils.query(new String[] {"render", "json"});
+            restUtils.query("render", "json");
 
             String countyName = getCounty(county);
 
@@ -53,7 +53,7 @@ public class SmartAssetApi {
                         countyName.substring(0, i).concat(", ").concat(county.getState().getCode()) :
                         countyName.substring(0, i);
 
-                restUtils.query(new String[] {"id", countyQuery});
+                restUtils.query("id", countyQuery);
 
                 Response response = restUtils.get();
                 String result = response.readEntity(String.class);

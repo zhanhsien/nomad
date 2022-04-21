@@ -1,17 +1,28 @@
 package main.kiwitor.nomad.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import main.kiwitor.nomad.model.deserialize.CityDeserializer;
+import main.kiwitor.nomad.model.deserialize.ZoneDeserializer;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
 @Setter
-public class City {
+@NoArgsConstructor
+@JsonDeserialize(using = CityDeserializer.class)
+public class City extends Zone {
     private String name;
+    private String censusId;
     private County county;
+    private int population;
 
     @Getter(AccessLevel.NONE)
     private double salesTax;
@@ -19,6 +30,7 @@ public class City {
     private double geoPay = 0.0;
     private List<Double> housePrices = new LinkedList<>();
     private List<House> houses = new LinkedList<>();
+    private Map<String, Integer> crimeRates = new HashMap<>();
 
     boolean hasGeoPay = false;
     boolean hasHouseData = false;
