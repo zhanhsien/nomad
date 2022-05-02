@@ -5,6 +5,8 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import main.kiwitor.nomad.Nomad;
 import main.kiwitor.nomad.model.County;
 import main.kiwitor.nomad.model.FemaEntry;
+import main.kiwitor.nomad.model.v2.CountyBean;
+import main.kiwitor.nomad.model.v2.StateBean;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -15,10 +17,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class FemaHazardIndex {
-    private static Map<String, String> hazardIndex;
-    private static Map<String, FemaEntry> entries;
+    private static Map<String, FemaEntry> hazardIndex;
 
-    public static void getHazardIndex(County county) {
+    public static void getHazardIndex(StateBean state, CountyBean county) {
         if(Objects.isNull(hazardIndex)) {
             final String fileName = "NRI_Table_Counties/NRI_Table_Counties.csv";
             ClassLoader classloader = Nomad.class.getClassLoader();
@@ -30,27 +31,23 @@ public class FemaHazardIndex {
 
                 Spliterator<FemaEntry> spliterator = Spliterators.spliteratorUnknownSize(femaItr, 0);
                 hazardIndex = StreamSupport.stream(spliterator, true)
-                        .filter(entry -> entry.getRiskScore().matches("-?\\d+(\\.\\d+)?"))
-                        .collect(Collectors.toMap(
-                            e -> e.getCounty().concat(" ").concat(e.getCountyType()).concat(":").concat(e.getStateCode()).toLowerCase(),
-                            e -> e.getRiskScore().concat("\t").concat(e.getRiskRating().concat("\t").concat(e.getPopulation()))
-                ));
+//                        .filter(entry -> entry.getRiskScore().matches("-?\\d+(\\.\\d+)?"))
+                        .collect(Collectors.toMap(FemaEntry::getNriId, e -> e));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         try {
-            String name = county.getName().replaceAll("Saint", "St.");
-            String key = name.concat(":").concat(county.getState().getCode()).toLowerCase();
-            county.setHazardIndex(hazardIndex.get(key));
+            county.setHazardIndex(hazardIndex.get(county.getId()));
         } catch (Exception e) {
             System.out.println("Couldn't find: " + county.getName());
         }
     }
 
-    public static Map<String, FemaEntry> getEntries() {
-        if(Objects.isNull(entries)) {
+    private static List<FemaEntry> index;
+    public static List<FemaEntry> getIndex() {
+        if(Objects.isNull(index)) {
             final String fileName = "NRI_Table_Counties/NRI_Table_Counties.csv";
             ClassLoader classloader = Nomad.class.getClassLoader();
 
@@ -59,17 +56,12 @@ public class FemaHazardIndex {
                 MappingIterator<FemaEntry> femaItr = new CsvMapper()
                         .readerWithTypedSchemaFor(FemaEntry.class).readValues(content);
 
-                Spliterator<FemaEntry> spliterator = Spliterators.spliteratorUnknownSize(femaItr, 0);
-                entries = StreamSupport.stream(spliterator, true)
-                        .collect(Collectors.toMap(
-                                e -> e.getCounty().concat(" ").concat(e.getCountyType()).concat(",").concat(e.getStateCode()).toLowerCase(),
-                                e -> e
-                        ));
+                index = femaItr.readAll();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        return entries;
+        return index;
     }
 }

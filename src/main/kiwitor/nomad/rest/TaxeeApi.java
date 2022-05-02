@@ -1,10 +1,8 @@
 package main.kiwitor.nomad.rest;
 
-import main.kiwitor.nomad.constants.TaxType;
-import main.kiwitor.nomad.model.State;
-import main.kiwitor.nomad.model.TaxBracket;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import main.kiwitor.nomad.model.response.TaxeeResponse;
+import main.kiwitor.nomad.model.v2.StateBean;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -19,17 +17,7 @@ public class TaxeeApi {
 
     private static final int year = 2020;
 
-    private static final String SINGLE = "single";
-    private static final String MARRIED = "married";
-    private static final String TYPE = "type";
-    private static final String NONE = "none";
-    private static final String DEDUCTIONS = "deductions";
-    private static final String DEDUCTION_AMOUNT = "deduction_amount";
-    private static final String BRACKETS = "income_tax_brackets";
-    private static final String BRACKET = "bracket";
-    private static final String RATE = "marginal_rate";
-
-    public static void setStateTax(State state) {
+    public static StateBean setStateTax(StateBean state) {
         String path = String.format(STATE_TAX_RESOURCE, year, state.getCode());
         try(RestUtils restUtils = new RestUtils(BASE_URL, path)) {
             MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
@@ -38,44 +26,12 @@ public class TaxeeApi {
 
             Response response = restUtils.get(headers);
             String result = response.readEntity(String.class);
-            deserialize(state, result);
+
+            Gson gson = new Gson();
+            TaxeeResponse resp = gson.fromJson(result, TaxeeResponse.class);
+            state.setIncomeTax(resp);
         }
-    }
 
-    private static void deserialize(State state,  String str) {
-        JSONObject json = new JSONObject(str);
-        JSONObject singleJson = json.getJSONObject(SINGLE);
-        JSONObject jointJson = json.getJSONObject(MARRIED);
-
-        if(singleJson.optString(TYPE).equals(NONE)) {
-            state.setTaxType(TaxType.NONE);
-        } else {
-            JSONArray singleBracketsJson = singleJson.optJSONArray(BRACKETS);
-            JSONArray jointBracketsJson = jointJson.optJSONArray(BRACKETS);
-            for(int i = 0; i < singleBracketsJson.length(); i++) {
-                JSONObject singleBracketJson = singleBracketsJson.getJSONObject(i);
-                JSONObject jointBracketJson = jointBracketsJson.getJSONObject(i);
-                double single = singleBracketJson.optDouble(BRACKET, 0.00);
-                double joint = jointBracketJson.optDouble(BRACKET, 0.00);
-                double rate = singleBracketJson.optDouble(RATE, 0.00);
-                state.addBracket(new TaxBracket(single, joint, rate));
-            }
-
-            singleJson.optJSONArray(DEDUCTIONS).forEach(obj -> {
-                JSONObject jsonObj = (JSONObject) obj;
-                state.incrementSingle(jsonObj.optDouble(DEDUCTION_AMOUNT, 0.00));
-            });
-
-            jointJson.optJSONArray(DEDUCTIONS).forEach(obj -> {
-                JSONObject jsonObj = (JSONObject) obj;
-                state.incrementJoint(jsonObj.optDouble(DEDUCTION_AMOUNT, 0.00));
-            });
-
-            if(state.getBrackets().size() == 1) {
-                state.setTaxType(TaxType.FLAT);
-            } else {
-                state.setTaxType(TaxType.TIER);
-            }
-        }
+        return state;
     }
 }

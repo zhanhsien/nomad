@@ -1,12 +1,9 @@
 package main.kiwitor.nomad.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import main.kiwitor.nomad.model.deserialize.CityDeserializer;
-import main.kiwitor.nomad.model.deserialize.ZoneDeserializer;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,7 +14,6 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @NoArgsConstructor
-@JsonDeserialize(using = CityDeserializer.class)
 public class City extends Zone {
     private String name;
     private String censusId;

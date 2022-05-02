@@ -32,7 +32,7 @@ public class SalesTaxApi {
 
                 stateSalesTax = elements.parallelStream().collect(Collectors.toMap(
                         (e) -> e.select("strong").text().replaceAll("\\s\\(([^)]+)\\)", ""),
-                        (e) -> HtmlUtils.parsePercent(e.select("td[class=\"center\"]").text().replaceAll("%", ""))
+                        (e) -> HtmlUtils.parsePercent(e.select("td[class=\"center\"]").text())
                 ));
             }
         }

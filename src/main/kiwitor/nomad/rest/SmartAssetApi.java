@@ -1,13 +1,17 @@
 package main.kiwitor.nomad.rest;
 
-import main.kiwitor.nomad.model.County;
+import main.kiwitor.nomad.model.v2.CountyBean;
+import main.kiwitor.nomad.model.v2.StateBean;
+import main.kiwitor.nomad.util.HtmlUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SmartAssetApi {
@@ -17,12 +21,41 @@ public class SmartAssetApi {
 
     private static final int year = 2020;
 
-    public static void getPropertyTax(County county) {
-        String path = String.format(PROPERTY_TAX_RESOURCE, county.getState().getName().toLowerCase().replaceAll(" ", "-"));
+    public static Map<String, String> problematicCounties = new HashMap<>();
+
+    private static Map<String, Map<String, Double>> propertyTaxRates = new HashMap<>();
+    public static void getPropertyTax(StateBean state, CountyBean county) {
+        if(Objects.isNull(propertyTaxRates.get(state.getId()))) {
+            String path = String.format(PROPERTY_TAX_RESOURCE, state.getName().toLowerCase().replaceAll(" ", "-"));
+            try (RestUtils restUtils = new RestUtils(BASE_URL, path)) {
+                Response response = restUtils.get();
+                String result = response.readEntity(String.class);
+
+                Document doc = Jsoup.parse(result);
+                Elements elements = doc.select("div[id^=table-pk] tr:not([class=head])");
+
+                propertyTaxRates.put(state.getId(), elements.parallelStream().collect(Collectors.toMap(
+                    e -> Objects.requireNonNull(e.select("td").first()).text(),
+                    e -> HtmlUtils.parsePercent(Objects.requireNonNull(e.select("td").last()).text())
+                )));
+            }
+        }
+
+        try {
+            Map<String, Double> stateMap = propertyTaxRates.get(state.getId());
+            double rate = (double) county.getOrDefault(stateMap, -1.0);
+            county.setPropertyTax(rate);
+        } catch(Exception e) {
+//            System.out.println("Shit fucked up");
+        }
+    }
+
+    public static void getPropertyTax1(StateBean state, CountyBean county) {
+        String path = String.format(PROPERTY_TAX_RESOURCE, state.getName().toLowerCase().replaceAll(" ", "-"));
         try(RestUtils restUtils = new RestUtils(BASE_URL, path)) {
             restUtils.query("render", "json");
 
-            String countyName = getCounty(county);
+            String countyName = getCounty(state, county);
 
             if(!StringUtils.isNotEmpty(countyName)) {
                 throw new Exception("Problem");
@@ -38,26 +71,29 @@ public class SmartAssetApi {
             double propertyTax = json.optDouble("countyTax");
             county.setPropertyTax(propertyTax / 100);
         } catch(Exception e) {
-            System.out.println("Problem: " + county.getName() + " State: " + county.getState().getCode());
+            problematicCounties.put(county.getId(), county.getName().concat("\t").concat(state.getCode()));
+            System.out.println("Problem: " + county.getName() + " State: " + state.getCode());
         }
     }
 
-    public static String getCounty(County county) {
+    private static String getCounty(StateBean state, CountyBean county) {
         String countyName = county.getName()
                 .replaceAll("-", " ")
-                .replaceAll("Kentucky State ", "");
+                .replaceAll("Kentucky State ", "")
+                .replaceAll("'", "");
+//                .replaceAll("Saint", "St.");
 
         for(int i = countyName.length(); i > 2; i--) {
             try(RestUtils restUtils = new RestUtils(BASE_URL, LOCATION_RESOURCE)) {
                 String countyQuery = i == countyName.length() ?
-                        countyName.substring(0, i).concat(", ").concat(county.getState().getCode()) :
+                        countyName.substring(0, i).concat(", ").concat(state.getCode()) :
                         countyName.substring(0, i);
 
                 restUtils.query("id", countyQuery);
 
                 Response response = restUtils.get();
                 String result = response.readEntity(String.class);
-                String match = parseCountyMatch(county, result);
+                String match = parseCountyMatch(state, county, result);
                 if(StringUtils.isNotEmpty(match)) {
                     return match;
                 }
@@ -67,10 +103,10 @@ public class SmartAssetApi {
         return null;
     }
 
-    private static String parseCountyMatch(County county, String result) {
+    private static String parseCountyMatch(StateBean state, CountyBean county, String result) {
         if(StringUtils.isNotEmpty(result)) {
             List<String> matches = Arrays.stream(result.split("\n"))
-                    .filter(match -> match.endsWith(county.getState().getCode()))
+                    .filter(match -> match.endsWith(state.getCode()))
                     .collect(Collectors.toList());
 
             if(matches.size() == 1) {
@@ -88,4 +124,19 @@ public class SmartAssetApi {
 
         return null;
     }
+
+    //Unable to find, but they probably exist by using the progressive search
+    //C22037	East Feliciana	LA
+    //C22065	Madison	LA
+    //C22003	Allen	LA
+    //C22009	Avoyelles	LA
+    //C22081	Red River	LA
+    //C22013	Bienville	LA
+    //C28055	Issaquena	MS
+    //C02164	Lake and Peninsula	AK
+    //C02013	Aleutians East	AK
+    //C02050	Bethel	AK
+    //C02068	Denali	AK
+    //C02158	Kusilvak	AK
+    //C46102	Shannon	SD
 }

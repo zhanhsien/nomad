@@ -1,0 +1,4 @@
+Truncate 'City'
+Truncate '
+' ' -> '-'
+'Census Area' -> 'County'

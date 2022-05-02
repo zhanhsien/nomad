@@ -12,6 +12,9 @@ repositories {
 }
 
 dependencies {
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.9.0'
+    implementation group: 'com.google.guava', name: 'guava', version: '31.1-jre'
+
     implementation 'org.json:json:20211205'
 
     compile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '4.7.5.Final'
